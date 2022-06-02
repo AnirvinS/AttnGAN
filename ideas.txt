@@ -1,0 +1,7 @@
+Noise Generation by sampling stochasticity through different distributions. Uniform, Bernoulli, find out 2-3 more.
+Hyper-parameter Tuning. Lambda [Ablation (DAMSM)], Gamma1, Gamma2 (Generate Eval Script)
+New Data (Text) // Results and Playing Around (Multiple examples by changing the max attention words)
+
+Look into replacing the CNN in DAMSM with a more powerful, recent one. //subject to integration
+New Data (Custom Dataset) // subject to finding a new dataset
+
