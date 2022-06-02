@@ -24,6 +24,15 @@ import time
 import numpy as np
 import sys
 
+noise_distributions = {
+    "normal": torch.distributions.normal.Normal(0, 1),
+    "laplace": torch.distributions.laplace.Laplace(0, 1),
+    "uniform": torch.distributions.uniform.Uniform(-1, 1),
+    "cauchy": torch.distributions.cauchy.Cauchy(0, 1),
+    "exponential": torch.distributions.exponential.Exponential(1)
+
+}
+
 # ################# Text to image task############################ #
 class condGANTrainer(object):
     def __init__(self, output_dir, data_loader, n_words, ixtoword):
@@ -33,8 +42,8 @@ class condGANTrainer(object):
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
 
-        torch.cuda.set_device(cfg.GPU_ID)
-        cudnn.benchmark = True
+        # torch.cuda.set_device(cfg.GPU_ID)
+        # cudnn.benchmark = True
 
         self.batch_size = cfg.TRAIN.BATCH_SIZE
         self.max_epoch = cfg.TRAIN.MAX_EPOCH
@@ -223,8 +232,13 @@ class condGANTrainer(object):
 
         batch_size = self.batch_size
         nz = cfg.GAN.Z_DIM
-        noise = Variable(torch.FloatTensor(batch_size, nz))
-        fixed_noise = Variable(torch.FloatTensor(batch_size, nz).normal_(0, 1))
+        try:
+            noise_distribution = noise_distributions[cfg.NOISE]
+        except:
+            raise ValueError("Noise Distribution Selection cannot be emulated.\n Check config file to see valid options.\n")
+
+        noise = noise_distribution.sample(batch_size, nz)
+        # fixed_noise = Variable(torch.FloatTensor(batch_size, nz).normal_(0, 1))
         if cfg.CUDA:
             noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
 
@@ -357,7 +371,7 @@ class condGANTrainer(object):
             else:
                 netG = G_NET()
             netG.apply(weights_init)
-            netG.cuda()
+            # netG.cuda()
             netG.eval()
             #
             text_encoder = RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
@@ -365,13 +379,13 @@ class condGANTrainer(object):
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             text_encoder.load_state_dict(state_dict)
             print('Load text encoder from:', cfg.TRAIN.NET_E)
-            text_encoder = text_encoder.cuda()
+            text_encoder = text_encoder #.cuda()
             text_encoder.eval()
 
             batch_size = self.batch_size
             nz = cfg.GAN.Z_DIM
             noise = Variable(torch.FloatTensor(batch_size, nz), volatile=True)
-            noise = noise.cuda()
+            noise = noise #.cuda()
 
             model_dir = cfg.TRAIN.NET_G
             state_dict = \
@@ -440,7 +454,7 @@ class condGANTrainer(object):
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             text_encoder.load_state_dict(state_dict)
             print('Load text encoder from:', cfg.TRAIN.NET_E)
-            text_encoder = text_encoder.cuda()
+            text_encoder = text_encoder #.cuda()
             text_encoder.eval()
 
             # the path to save generated images
@@ -454,23 +468,26 @@ class condGANTrainer(object):
                 torch.load(model_dir, map_location=lambda storage, loc: storage)
             netG.load_state_dict(state_dict)
             print('Load G from: ', model_dir)
-            netG.cuda()
+            netG #.cuda()
             netG.eval()
             for key in data_dic:
                 save_dir = '%s/%s' % (s_tmp, key)
+                print(save_dir)
                 mkdir_p(save_dir)
                 captions, cap_lens, sorted_indices = data_dic[key]
 
                 batch_size = captions.shape[0]
                 nz = cfg.GAN.Z_DIM
-                captions = Variable(torch.from_numpy(captions), volatile=True)
-                cap_lens = Variable(torch.from_numpy(cap_lens), volatile=True)
+                with torch.no_grad():
+                    captions = torch.from_numpy(captions)
+                    cap_lens = torch.from_numpy(cap_lens)
 
-                captions = captions.cuda()
-                cap_lens = cap_lens.cuda()
+                # captions = captions.cuda()
+                # cap_lens = cap_lens.cuda()
                 for i in range(1):  # 16
-                    noise = Variable(torch.FloatTensor(batch_size, nz), volatile=True)
-                    noise = noise.cuda()
+                    with torch.no_grad():
+                        noise = torch.FloatTensor(batch_size, nz)
+                    # noise = noise.cuda()
                     #######################################################
                     # (1) Extract text embeddings
                     ######################################################
@@ -497,6 +514,7 @@ class condGANTrainer(object):
                             # print('im', im.shape)
                             im = Image.fromarray(im)
                             fullpath = '%s_g%d.png' % (save_name, k)
+                            print(f"okay till here {fullpath}")
                             im.save(fullpath)
 
                         for k in range(len(attention_maps)):
@@ -512,6 +530,7 @@ class condGANTrainer(object):
                                                     [cap_lens_np[j]], self.ixtoword,
                                                     [attn_maps[j]], att_sze)
                             if img_set is not None:
+                                # print("Not None img_set")
                                 im = Image.fromarray(img_set)
                                 fullpath = '%s_a%d.png' % (save_name, k)
                                 im.save(fullpath)

@@ -5,3 +5,8 @@ scikit-image
 azure-storage-blob
 applicationinsights
 libmc
+torch
+nltk
+torchvision
+pandas
+pyyaml

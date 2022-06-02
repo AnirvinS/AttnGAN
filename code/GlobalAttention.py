@@ -48,7 +48,7 @@ def func_attention(query, context, gamma1):
     attn = torch.bmm(contextT, query) # Eq. (7) in AttnGAN paper
     # --> batch*sourceL x queryL
     attn = attn.view(batch_size*sourceL, queryL)
-    attn = nn.Softmax()(attn)  # Eq. (8)
+    attn = nn.Softmax(dim=1)(attn)  # Eq. (8)
 
     # --> batch x sourceL x queryL
     attn = attn.view(batch_size, sourceL, queryL)
@@ -106,7 +106,7 @@ class GlobalAttentionGeneral(nn.Module):
             # batch_size x sourceL --> batch_size*queryL x sourceL
             mask = self.mask.repeat(queryL, 1)
             attn.data.masked_fill_(mask.data, -float('inf'))
-        attn = self.sm(attn)  # Eq. (2)
+        attn = nn.Softmax(dim=1)(attn)  # Eq. (2)
         # --> batch x queryL x sourceL
         attn = attn.view(batch_size, queryL, sourceL)
         # --> batch x sourceL x queryL

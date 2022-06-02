@@ -17,6 +17,8 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
+temp_fp = "/Users/anirvin/PycharmProjects/AttnGAN/data/birds"
+
 dir_path = (os.path.abspath(os.path.join(os.path.realpath(__file__), './.')))
 sys.path.append(dir_path)
 
@@ -36,17 +38,17 @@ def parse_args():
 def gen_example(wordtoix, algo):
     '''generate images from example sentences'''
     from nltk.tokenize import RegexpTokenizer
-    filepath = '%s/example_filenames.txt' % (cfg.DATA_DIR)
+    filepath = '%s/example_filenames.txt' % (temp_fp)
     data_dic = {}
     with open(filepath, "r") as f:
-        filenames = f.read().decode('utf8').split('\n')
+        filenames = f.read().split('\n')    #.decode('utf8') before .split()
         for name in filenames:
             if len(name) == 0:
                 continue
-            filepath = '%s/%s.txt' % (cfg.DATA_DIR, name)
+            filepath = '%s/%s.txt' % (temp_fp, name)
             with open(filepath, "r") as f:
                 print('Load from:', name)
-                sentences = f.read().decode('utf8').split('\n')
+                sentences = f.read().split('\n')    # before .split()
                 # a list of indices for a sentence
                 captions = []
                 cap_lens = []
@@ -80,6 +82,7 @@ def gen_example(wordtoix, algo):
                 cap_array[i, :c_len] = cap
             key = name[(name.rfind('/') + 1):]
             data_dic[key] = [cap_array, cap_lens, sorted_indices]
+            # print(data_dic)
     algo.gen_example(data_dic)
 
 
@@ -93,8 +96,13 @@ if __name__ == "__main__":
     else:
         cfg.CUDA = False
 
+    noise_selection = cfg.NOISE
+
     if args.data_dir != '':
-        cfg.DATA_DIR = args.data_dir
+        # cfg.DATA_DIR = args.data_dir
+        cfg.DATA_DIR = temp_fp
+    print(f"Data Directory: {cfg.DATA_DIR, temp_fp}\nCfg Dataset: {cfg.DATASET_NAME}")
+
     print('Using config:')
     pprint.pprint(cfg)
 
@@ -121,10 +129,13 @@ if __name__ == "__main__":
     # Get data loader
     imsize = cfg.TREE.BASE_SIZE * (2 ** (cfg.TREE.BRANCH_NUM - 1))
     image_transform = transforms.Compose([
-        transforms.Scale(int(imsize * 76 / 64)),
+        transforms.Resize(int(imsize * 76 / 64)),
         transforms.RandomCrop(imsize),
         transforms.RandomHorizontalFlip()])
-    dataset = TextDataset(cfg.DATA_DIR, split_dir,
+
+    # fp = "/Users/anirvin/PycharmProjects/AttnGAN/data/birds"
+
+    dataset = TextDataset(temp_fp, split_dir,
                           base_size=cfg.TREE.BASE_SIZE,
                           transform=image_transform)
     assert dataset
@@ -136,6 +147,9 @@ if __name__ == "__main__":
     algo = trainer(output_dir, dataloader, dataset.n_words, dataset.ixtoword)
 
     start_t = time.time()
+
+    # cfg.B_VALIDATION = True
+
     if cfg.TRAIN.FLAG:
         algo.train()
     else:

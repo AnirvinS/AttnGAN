@@ -1,9 +1,12 @@
 CONFIG_NAME: 'attn2'
 
 DATASET_NAME: 'birds'
-DATA_DIR: '../data/birds'
+DATA_DIR: '/Users/anirvin/PycharmProjects/AttnGAN/data/birds'
+#DATA_DIR: '../data/birds'
 GPU_ID: 3
 WORKERS: 1
+
+NOISE: 'cauchy' # For all options for distributions, see: AttnGAN/code/miscc/trainer.py
 
 B_VALIDATION: False  # True  # False
 TREE:
@@ -12,10 +15,10 @@ TREE:
 
 TRAIN:
     FLAG: False
-    NET_G: '../models/bird_AttnGAN2.pth'
+    NET_G: '/Users/anirvin/PycharmProjects/AttnGAN/models/bird_AttnGAN2.pth'
     B_NET_D: False
     BATCH_SIZE: 100
-    NET_E: '../DAMSMencoders/bird/text_encoder200.pth'
+    NET_E: '/Users/anirvin/PycharmProjects/AttnGAN/DAMSMencoders/bird/text_encoder200.pth'
 
 
 GAN:
