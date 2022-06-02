@@ -10,7 +10,17 @@ from PIL import Image, ImageDraw, ImageFont
 from copy import deepcopy
 import skimage.transform
 
+noise_distributions = {
+    "normal": torch.distributions.normal.Normal(0, 1),
+    "laplace": torch.distributions.laplace.Laplace(0, 1),
+    "uniform": torch.distributions.uniform.Uniform(-1, 1),
+    "cauchy": torch.distributions.cauchy.Cauchy(0, 1),
+    "exponential": torch.distributions.exponential.Exponential(1)
 
+}
+
+def getNoise(noise_selection):
+    return noise_distributions[noise_selection]
 
 # For visualization ################################################
 COLOR_DIC = {0:[128,64,128],  1:[244, 35,232],

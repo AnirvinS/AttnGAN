@@ -11,7 +11,7 @@ import torch.onnx
 from datetime import datetime
 from torch.autograd import Variable
 from miscc.config import cfg
-from miscc.utils import build_super_images2
+from miscc.utils import build_super_images2, getNoise
 from model import RNN_ENCODER, G_NET
 from azure.storage.blob import BlockBlobService
 
@@ -22,6 +22,15 @@ else:
 
 from werkzeug.contrib.cache import SimpleCache
 cache = SimpleCache()
+
+noise_distributions = {
+    "normal": torch.distributions.normal.Normal(0, 1),
+    "laplace": torch.distributions.laplace.Laplace(0, 1),
+    "uniform": torch.distributions.uniform.Uniform(-1, 1),
+    "cauchy": torch.distributions.cauchy.Cauchy(0, 1),
+    "exponential": torch.distributions.exponential.Exponential(1)
+
+}
 
 def vectorize_caption(wordtoix, caption, copies=2):
     # create caption vector
@@ -57,6 +66,13 @@ def generate(caption, wordtoix, ixtoword, text_encoder, netG, blob_service, copi
     captions = Variable(torch.from_numpy(captions), volatile=True)
     cap_lens = Variable(torch.from_numpy(cap_lens), volatile=True)
     noise = Variable(torch.FloatTensor(batch_size, nz), volatile=True)
+    try:
+        noise_distribution = noise_distributions[cfg.NOISE]
+    except:
+        raise ValueError("Noise Distribution Selection cannot be emulated.\n Check config file to see valid options.\n")
+
+    noise = noise_distribution.sample(batch_size, nz)
+    fixed_noise = noise
 
     if cfg.CUDA:
         captions = captions.cuda()

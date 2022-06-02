@@ -24,6 +24,8 @@ __C.TREE = edict()
 __C.TREE.BRANCH_NUM = 3
 __C.TREE.BASE_SIZE = 64
 
+__C.NOISE = ''
+
 
 # Training options
 __C.TRAIN = edict()

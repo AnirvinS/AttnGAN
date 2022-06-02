@@ -33,6 +33,9 @@ noise_distributions = {
 
 }
 
+def getNoise(noise_selection):
+    return noise_distributions[noise_selection]
+
 # ################# Text to image task############################ #
 class condGANTrainer(object):
     def __init__(self, output_dir, data_loader, n_words, ixtoword):
@@ -237,7 +240,8 @@ class condGANTrainer(object):
         except:
             raise ValueError("Noise Distribution Selection cannot be emulated.\n Check config file to see valid options.\n")
 
-        noise = noise_distribution.sample(batch_size, nz)
+        noise = noise_distribution.sample((batch_size, nz))
+        fixed_noise = noise
         # fixed_noise = Variable(torch.FloatTensor(batch_size, nz).normal_(0, 1))
         if cfg.CUDA:
             noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
@@ -272,7 +276,7 @@ class condGANTrainer(object):
                 #######################################################
                 # (2) Generate fake images
                 ######################################################
-                noise.data.normal_(0, 1)
+                # noise.data.normal_(0, 1)
                 fake_imgs, _, mu, logvar = netG(noise, sent_emb, words_embs, mask)
 
                 #######################################################
@@ -384,8 +388,14 @@ class condGANTrainer(object):
 
             batch_size = self.batch_size
             nz = cfg.GAN.Z_DIM
-            noise = Variable(torch.FloatTensor(batch_size, nz), volatile=True)
-            noise = noise #.cuda()
+            try:
+                noise_distribution = noise_distributions[cfg.NOISE]
+            except:
+                raise ValueError(
+                    "Noise Distribution Selection cannot be emulated.\n Check config file to see valid options.\n")
+
+            noise = noise_distribution.sample((batch_size, nz))
+            fixed_noise = noise
 
             model_dir = cfg.TRAIN.NET_G
             state_dict = \
@@ -424,7 +434,7 @@ class condGANTrainer(object):
                     #######################################################
                     # (2) Generate fake images
                     ######################################################
-                    noise.data.normal_(0, 1)
+                    # noise.data.normal_(0, 1)
                     fake_imgs, _, _, _ = netG(noise, sent_emb, words_embs, mask)
                     for j in range(batch_size):
                         s_tmp = '%s/single/%s' % (save_dir, keys[j])
@@ -486,7 +496,14 @@ class condGANTrainer(object):
                 # cap_lens = cap_lens.cuda()
                 for i in range(1):  # 16
                     with torch.no_grad():
-                        noise = torch.FloatTensor(batch_size, nz)
+                        try:
+                            noise_distribution = noise_distributions[cfg.NOISE]
+                        except:
+                            raise ValueError(
+                                "Noise Distribution Selection cannot be emulated.\n Check config file to see valid options.\n")
+
+                        noise = noise_distribution.sample((batch_size, nz))
+                        fixed_noise = noise
                     # noise = noise.cuda()
                     #######################################################
                     # (1) Extract text embeddings
@@ -499,7 +516,7 @@ class condGANTrainer(object):
                     #######################################################
                     # (2) Generate fake images
                     ######################################################
-                    noise.data.normal_(0, 1)
+                    # noise.data.normal_(0, 1)
                     fake_imgs, attention_maps, _, _ = netG(noise, sent_emb, words_embs, mask)
                     # G attention
                     cap_lens_np = cap_lens.cpu().data.numpy()
