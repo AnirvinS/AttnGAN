@@ -1,5 +1,8 @@
 Noise Generation by sampling stochasticity through different distributions. Uniform, Bernoulli, find out 2-3 more.
-Hyper-parameter Tuning. Lambda [Ablation (DAMSM)], Gamma1, Gamma2 (Generate Eval Script)
+Hyper-parameter Tuning. Lambda [Ablation (DAMSM)], Gamma1, Gamma2 (Generate Eval Script):-
+Gamma 1 (γ1): is a factor that determines how much attention is paid to features of its relevant sub-regions when computing the region-context vector (c_i) for a word.
+Gamma 2 (γ2): is a factor that determines how much to magnify the importance of the most relevant word-to-region- context pair. When γ2 → ∞, R(Q,D) approximates to max_T−1 R(ci , ei ).
+Gamma 3 (γ3): is a smoothing factor (determined by experiments)
 New Data (Text) // Results and Playing Around (Multiple examples by changing the max attention words)
 
 Look into replacing the CNN in DAMSM with a more powerful, recent one. //subject to integration
