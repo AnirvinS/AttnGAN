@@ -1,8 +1,8 @@
 CONFIG_NAME: 'DAMSM'
 
 DATASET_NAME: 'birds'
-DATA_DIR: '../data/birds'
-GPU_ID: 0
+DATA_DIR: '/Users/anirvin/PycharmProjects/AttnGAN/data/birds'
+GPU_ID: -1
 WORKERS: 1
 
 
@@ -13,7 +13,7 @@ TREE:
 
 TRAIN:
     FLAG: True
-    NET_E: ''  # '../DAMSMencoders/bird/text_encoder200.pth'
+    NET_E: '/Users/anirvin/PycharmProjects/AttnGAN/DAMSMencoders/bird/text_encoder200.pth'  # '../DAMSMencoders/bird/text_encoder200.pth'
     BATCH_SIZE: 48
     MAX_EPOCH: 600
     SNAPSHOT_INTERVAL: 50

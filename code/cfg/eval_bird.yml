@@ -6,7 +6,7 @@ DATA_DIR: '/Users/anirvin/PycharmProjects/AttnGAN/data/birds'
 GPU_ID: 3
 WORKERS: 1
 
-NOISE: 'exponential' # For all options for distributions, see: AttnGAN/code/trainer.py
+NOISE: 'normal' # For all options for distributions, see: AttnGAN/code/trainer.py
 
 B_VALIDATION: False  # True  # False
 TREE:

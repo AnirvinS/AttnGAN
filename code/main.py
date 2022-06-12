@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument('--gpu', dest='gpu_id', type=int, default=-1)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
+    parser.add_argument('--gammatwo', dest='gammatwo', type=float, default=5, help='Value of Gamma2. Best Value till now: 5.')
     args = parser.parse_args()
     return args
 
@@ -96,6 +97,9 @@ if __name__ == "__main__":
     else:
         cfg.CUDA = False
 
+    if args.gammatwo is not None:
+        cfg.TRAIN.SMOOTH.GAMMA2 = args.gammatwo
+
     noise_selection = cfg.NOISE
 
     if args.data_dir != '':
@@ -113,6 +117,7 @@ if __name__ == "__main__":
     random.seed(args.manualSeed)
     np.random.seed(args.manualSeed)
     torch.manual_seed(args.manualSeed)
+
     if cfg.CUDA:
         torch.cuda.manual_seed_all(args.manualSeed)
 

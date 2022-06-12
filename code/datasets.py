@@ -77,10 +77,12 @@ def get_imgs(img_path, imsize, bbox=None,
     if cfg.GAN.B_DCGAN:
         ret = [normalize(img)]
     else:
-        for i in range(cfg.TREE.BRANCH_NUM):
-            # print(imsize[i])
+        # for i in range(cfg.TREE.BRANCH_NUM):
+        for i in range(1):
+            print(imsize)
+            print(cfg.TREE.BRANCH_NUM)
             if i < (cfg.TREE.BRANCH_NUM - 1):
-                re_img = transforms.Scale(imsize[i])(img)
+                re_img = transforms.Resize(imsize[i])(img)
             else:
                 re_img = img
             ret.append(normalize(re_img))
@@ -104,6 +106,7 @@ class TextDataset(data.Dataset):
             self.imsize.append(base_size)
             base_size = base_size * 2
 
+        print(f"self imsize: {self.imsize}")
         self.data = []
         self.data_dir = data_dir
 

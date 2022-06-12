@@ -170,14 +170,22 @@ def build_models():
     labels = Variable(torch.LongTensor(range(batch_size)))
     start_epoch = 0
     if cfg.TRAIN.NET_E != '':
-        state_dict = torch.load(cfg.TRAIN.NET_E)
+        state_dict = torch.load(cfg.TRAIN.NET_E, map_location=torch.device('cpu'))
         text_encoder.load_state_dict(state_dict)
         print('Load ', cfg.TRAIN.NET_E)
-        #
+
+        # name = cfg.TRAIN.NET_E.replace('text_encoder', 'image_encoder')
+        # efficientnet-b6-c76e70fd.pth
+
+        #UNCOMMENT BELOW for OG
+
         name = cfg.TRAIN.NET_E.replace('text_encoder', 'image_encoder')
         state_dict = torch.load(name)
-        image_encoder.load_state_dict(state_dict)
         print('Load ', name)
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        image_encoder.load_state_dict(state_dict)
+
+
 
         istart = cfg.TRAIN.NET_E.rfind('_') + 8
         iend = cfg.TRAIN.NET_E.rfind('.')
@@ -228,14 +236,15 @@ if __name__ == "__main__":
     mkdir_p(model_dir)
     mkdir_p(image_dir)
 
-    torch.cuda.set_device(cfg.GPU_ID)
-    cudnn.benchmark = True
+    if cfg.CUDA:
+        torch.cuda.set_device(cfg.GPU_ID)
+        cudnn.benchmark = True
 
     # Get data loader ##################################################
     imsize = cfg.TREE.BASE_SIZE * (2 ** (cfg.TREE.BRANCH_NUM-1))
     batch_size = cfg.TRAIN.BATCH_SIZE
     image_transform = transforms.Compose([
-        transforms.Scale(int(imsize * 76 / 64)),
+        transforms.Resize(int(imsize * 76 / 64)),
         transforms.RandomCrop(imsize),
         transforms.RandomHorizontalFlip()])
     dataset = TextDataset(cfg.DATA_DIR, 'train',

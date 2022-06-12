@@ -181,7 +181,7 @@ def generator_loss(netsD, image_encoder, fake_imgs, real_labels,
             g_loss = cond_errG
         errG_total += g_loss
         # err_img = errG_total.data[0]
-        logs += 'g_loss%d: %.2f ' % (i, g_loss.data[0])
+        logs += 'g_loss%d: %.2f ' % (i, g_loss.data)
 
         # Ranking loss
         if i == (numDs - 1):
@@ -194,15 +194,17 @@ def generator_loss(netsD, image_encoder, fake_imgs, real_labels,
             w_loss = (w_loss0 + w_loss1) * \
                 cfg.TRAIN.SMOOTH.LAMBDA
             # err_words = err_words + w_loss.data[0]
+            print(f"wloss: {w_loss}")
 
             s_loss0, s_loss1 = sent_loss(cnn_code, sent_emb,
                                          match_labels, class_ids, batch_size)
             s_loss = (s_loss0 + s_loss1) * \
                 cfg.TRAIN.SMOOTH.LAMBDA
             # err_sent = err_sent + s_loss.data[0]
-
+            print(f"sloss: {s_loss}")
             errG_total += w_loss + s_loss
-            logs += 'w_loss: %.2f s_loss: %.2f ' % (w_loss.data[0], s_loss.data[0])
+            print(f"errg Tot: {errG_total}")
+            logs += 'w_loss: %.2f s_loss: %.2f ' % (w_loss.data, s_loss.data)
     return errG_total, logs
 
 

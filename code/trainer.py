@@ -16,6 +16,7 @@ from miscc.utils import weights_init, load_params, copy_G_params
 from model import G_DCGAN, G_NET
 from datasets import prepare_data
 from model import RNN_ENCODER, CNN_ENCODER
+from pandas import DataFrame as dff
 
 from miscc.losses import words_loss
 from miscc.losses import discriminator_loss, generator_loss, KL_loss
@@ -65,6 +66,18 @@ class condGANTrainer(object):
 
         image_encoder = CNN_ENCODER(cfg.TEXT.EMBEDDING_DIM)
         img_encoder_path = cfg.TRAIN.NET_E.replace('text_encoder', 'image_encoder')
+        # model_url = url_map[arch]
+        # pretrain_state_dict = model_zoo.load_url(model_url, progress=progress)
+        # model_state_dict = model.state_dict()
+        #
+        # pattern = re.compile(r"(.+)\.\d+(\.\d+\..+)")
+        # for key, value in model_state_dict.items():
+        #     pretrain_key = re.sub(pattern, r"\1\2", key)
+        #     if pretrain_key in pretrain_state_dict and value.shape == pretrain_state_dict[pretrain_key].shape:
+        #         model_state_dict[key] = pretrain_state_dict[pretrain_key]
+        #
+        # model.load_state_dict(model_state_dict)
+        print('Load image encoder from:', img_encoder_path)
         state_dict = \
             torch.load(img_encoder_path, map_location=lambda storage, loc: storage)
         image_encoder.load_state_dict(state_dict)
@@ -230,6 +243,7 @@ class condGANTrainer(object):
     def train(self):
         text_encoder, image_encoder, netG, netsD, start_epoch = self.build_models()
         avg_param_G = copy_G_params(netG)
+        errGL, logGL, geniterl = [], [], []
         optimizerG, optimizersD = self.define_optimizers(netG, netsD)
         real_labels, fake_labels, match_labels = self.prepare_labels()
 
@@ -292,7 +306,7 @@ class condGANTrainer(object):
                     errD.backward()
                     optimizersD[i].step()
                     errD_total += errD
-                    D_logs += 'errD%d: %.2f ' % (i, errD.data[0])
+                    D_logs += 'errD%d: %.2f ' % (i, errD.data)
 
                 #######################################################
                 # (4) Update G network: maximize log(D(G(z)))
@@ -309,7 +323,21 @@ class condGANTrainer(object):
                                    words_embs, sent_emb, match_labels, cap_lens, class_ids)
                 kl_loss = KL_loss(mu, logvar)
                 errG_total += kl_loss
-                G_logs += 'kl_loss: %.2f ' % kl_loss.data[0]
+                G_logs += 'kl_loss: %.2f ' % kl_loss.data
+
+                #Save Generator Loss & Logs
+
+
+                geniterl.append(gen_iterations)
+                errGL.append(errG_total)
+                logGL.append(G_logs)
+
+                col1, col2, col3 = 'Generator Error', 'Generator Logs', 'Iteration'
+
+                dataSave = dff({col1: errGL, col2: logGL, col3: geniterl})
+                save_name = f'generator_sheet_gammatwo{int(cfg.TRAIN.SMOOTH.GAMMA2)}'
+                dataSave.to_excel(save_name, sheet_name='sheet1', index=False)
+
                 # backward and update parameters
                 errG_total.backward()
                 optimizerG.step()
